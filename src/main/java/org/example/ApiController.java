@@ -34,9 +34,7 @@ public class ApiController {
                     if(registerEntityRepository.findById(registerEntity.customer_id).map(registerEntity1 -> false).blockOptional().orElse(true))
                     {
                         return  registerEntityRepository.save(registerEntity).map(
-                                registerEntity1 -> {
-                                    return ResponseEntity.ok(new StringWrapper("success"));
-                                }
+                                registerEntity1 -> ResponseEntity.ok(new StringWrapper("success"))
                         ).block();
                     }
                     else
@@ -111,7 +109,7 @@ public class ApiController {
                         if(!(nowOrder.status.equals(Status.INITIAL) || nowOrder.status.equals(Status.OUT)||nowOrder.status.equals(Status.PAUSED)))
                         {
                             return ResponseEntity.status(400).body(null);
-                        }else{;
+                        }else{
                             waitingQueue.add(nowOrder);
                             nowOrder.status=Status.WAITING;
                             nowOrder.LastDate=LocalDateTime.now();
@@ -140,7 +138,7 @@ public class ApiController {
                         return ResponseEntity.status(400).body(serviceSliceWrapper);
                     } else if(nowOrder.status.equals(Status.IN_PROGRESS)){
                         LocalDateTime nowdate=LocalDateTime.now();
-                        nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowdate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
+//                        nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowdate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
                         nowOrder.LastDate=nowdate;
                         nowOrder.actions.put(nowdate,new Action(ActionType.Query,nowOrder.serviceSlice.getCost()));
                         ServiceSliceWrapper serviceSliceWrapper=new ServiceSliceWrapper(nowOrder.serviceSlice,"ok");
@@ -165,7 +163,7 @@ public class ApiController {
                         return ResponseEntity.status(400).body(null);
                     } else {
                         LocalDateTime nowDate =LocalDateTime.now();
-                        nowOrder.serviceSlice.setCost(Speed.valueOf(speedJson.speed).getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
+//                        nowOrder.serviceSlice.setCost(Speed.valueOf(speedJson.speed).getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
                         nowOrder.actions.put(nowDate, new Action(ActionType.ChangeSpeed, speedJson.speed,nowOrder.serviceSlice.getCost()));
                         nowOrder.serviceSlice.setSpeed(Speed.valueOf(speedJson.speed));
                         nowOrder.LastDate = nowDate;
@@ -185,7 +183,7 @@ public class ApiController {
                         return ResponseEntity.status(400).body(null);
                     } else {
                         LocalDateTime nowDate =LocalDateTime.now();
-                        nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
+//                        nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
                         nowOrder.actions.put(nowDate, new Action(ActionType.ChangeTemp,String.valueOf(tempJson.temp),nowOrder.serviceSlice.getCost()));
                         nowOrder.serviceSlice.setTarget_temp(tempJson.temp);
                         nowOrder.LastDate = nowDate;
@@ -208,7 +206,7 @@ public class ApiController {
                             servingQueue.remove(nowOrder);
                             nowOrder.status = Status.PAUSED;
                             LocalDateTime nowDate =LocalDateTime.now();
-                            nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
+//                            nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
                             nowOrder.actions.put(nowDate, new Action(ActionType.Pause,nowOrder.serviceSlice.getCost()));
                             nowOrder.LastDate = nowDate;
                             StringWrapper stringWrapper = new StringWrapper("ok");
@@ -240,7 +238,7 @@ public class ApiController {
                         if (servingQueue.contains(nowOrder)) {
                             servingQueue.remove(nowOrder);
                            LocalDateTime nowDate =LocalDateTime.now();
-                            nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
+//                            nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
                             nowOrder.actions.put(nowDate, new Action(ActionType.OUT,nowOrder.serviceSlice.getCost()));
                             nowOrder.LastDate = nowDate;
                             nowOrder.status = Status.OUT;
@@ -275,8 +273,7 @@ public class ApiController {
                     if(nowOrder==null||!nowOrder.status.equals(Status.OUT)) {
                         return ResponseEntity.status(400).body(null);
                     }else{
-                        LocalDateTime nowDate =LocalDateTime.now();
-                        nowOrder.LastDate= nowDate;
+                        nowOrder.LastDate= LocalDateTime.now();
                         return ResponseEntity.ok(nowOrder);
                     }
                 }
@@ -292,8 +289,7 @@ public class ApiController {
                     if(nowOrder==null||!nowOrder.status.equals(Status.OUT)) {
                         return ResponseEntity.status(400).body(null);
                     }else{
-                        LocalDateTime nowDate =LocalDateTime.now();
-                        nowOrder.LastDate= nowDate;
+                        nowOrder.LastDate= LocalDateTime.now();
                         return ResponseEntity.ok(nowOrder);
                     }
                 }
@@ -309,13 +305,10 @@ public class ApiController {
               if(nowOrder==null||!nowOrder.status.equals(Status.OUT)) {
                   return ResponseEntity.status(400).body(null);
               }else{
-                    LocalDateTime nowDate =LocalDateTime.now();
-                    nowOrder.LastDate= nowDate;
+                  nowOrder.LastDate= LocalDateTime.now();
                     nowOrder.status=Status.COMPLETE;
                     return orderRepository.save(nowOrder).map(
-                      order -> {
-                          return ResponseEntity.status(200).body(null);
-                      }
+                      order -> ResponseEntity.status(200).body(null)
                     ).block();
               }
           }

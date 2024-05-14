@@ -21,12 +21,6 @@ public class ActionsToJsonConvertor implements Converter<Map<LocalDateTime, Acti
 
     @Override
     public String convert(Map<LocalDateTime,Action> actions) {
-//            String result = "{";
-//            for (Map.Entry<Date, Action> entry : actions.entrySet()) {
-//                result += entry.getKey().toString() + ":" + actionToJsonConvertor.convert(entry.getValue()) + ",";
-//            }
-//            result+="}";
-//            return result;
         try {
             return objectMapper.writeValueAsString(actions);
         } catch (JsonProcessingException e) {
