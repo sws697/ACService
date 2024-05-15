@@ -16,7 +16,7 @@ public class DatabaseStartup {
     @Bean
     CommandLineRunner initDatabase(R2dbcEntityTemplate template, ActionsToJsonConvertor actionsToJsonConvertor, ServiceSliceToJsonConverter serviceSliceToJsonConverter, ActionToJsonConvertor actionToJsonConvertor){
         return args ->{
-             template.getDatabaseClient().sql("CREATE TABLE IF NOT EXISTS register (customer_id BIGINT PRIMARY KEY, name VARCHAR(255), password VARCHAR(255))").fetch().rowsUpdated()
+             template.getDatabaseClient().sql("CREATE TABLE IF NOT EXISTS register (customer_id BIGINT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255), password VARCHAR(255))").fetch().rowsUpdated()
                     .as(StepVerifier::create)
                     .expectNextCount(1)
                     .verifyComplete();
@@ -25,7 +25,7 @@ public class DatabaseStartup {
 //                    .as(StepVerifier::create)
 //                    .expectNextCount(1)
 //                    .verifyComplete();
-            template.getDatabaseClient().sql("CREATE TABLE IF NOT EXISTS ACsorder (id BIGINT PRIMARY KEY, last_date TIMESTAMP, status VARCHAR(255), actions JSON, service_slice JSON, customer_id BIGINT, customer_name VARCHAR(255), room_id VARCHAR(255))").fetch().rowsUpdated()
+            template.getDatabaseClient().sql("CREATE TABLE IF NOT EXISTS ACsorder (id BIGINT PRIMARY KEY AUTO_INCREMENT, last_date TIMESTAMP, status VARCHAR(255), actions JSON, service_slice JSON, customer_id BIGINT, customer_name VARCHAR(255), room_id VARCHAR(255))").fetch().rowsUpdated()
                     .as(StepVerifier::create)
                     .expectNextCount(1)
                     .verifyComplete();

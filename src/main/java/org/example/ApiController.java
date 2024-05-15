@@ -2,10 +2,7 @@ package org.example;
 
 import org.example.jsonwrapper.*;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -15,6 +12,7 @@ import java.time.temporal.ChronoField;
 import static org.example.ACService.*;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/user")
 public class ApiController {
 
@@ -33,6 +31,8 @@ public class ApiController {
                     RegisterEntity registerEntity=registerEntityWrapper.data;
                     if(registerEntityRepository.findById(registerEntity.customer_id).map(registerEntity1 -> false).blockOptional().orElse(true))
                     {
+                        registerEntity.customer_id=null;
+                        System.out.println("registering");
                         return  registerEntityRepository.save(registerEntity).map(
                                 registerEntity1 -> ResponseEntity.ok(new StringWrapper("success"))
                         ).block();
@@ -44,7 +44,7 @@ public class ApiController {
                 }
         );
     }
-    @PostMapping("/check_available_room")
+    @PostMapping("/check_available_room")//该方法确定房间的密码,将房间与用户绑定
     public Mono<ResponseEntity<StringWrapper>> CheckAvailableRoom(@RequestBody Mono<RegisterEntityWrapper> registerEntityWrapperMono)
     {
         return registerEntityWrapperMono.mapNotNull(
@@ -55,8 +55,10 @@ public class ApiController {
                   if(entry.getValue()==null||entry.getValue().status.equals(Status.COMPLETE))
                   {
                       Order newOrder=new Order(LocalDateTime.now(),Status.INITIAL,new ServiceSlice(Speed.MEDIUM,0.0,31,25), registerEntity.customer_id, registerEntity.name,entry.getKey());
+                      RoomToCustomerPassword.replace(entry.getKey(),registerEntity.password);
                       RoomToOrder.replace(entry.getKey(),newOrder);
-                        return ResponseEntity.ok(new StringWrapper(entry.getKey()));
+                      newOrder.serviceSlice.setCurrent_temp(defaultTemp.get(entry.getKey()));
+                      return ResponseEntity.ok(new StringWrapper(entry.getKey()));
                   }
               }
                 return ResponseEntity.status(400).body(new StringWrapper("no room available"));
@@ -69,7 +71,7 @@ public class ApiController {
         return enterEntityWrapperMono.map(
                 enterEntityWrapper->{
                     EnterEntity enterEntity=enterEntityWrapper.data;
-                    if(ACService.RoomToCustomerPassword.get(enterEntity.getRoom_id())!=null&&(RoomToCustomerPassword.get(enterEntity.getRoom_id())==null||(ACService.RoomToCustomerPassword.get(enterEntity.getRoom_id()).equals(enterEntity.getPassword()))))
+                    if(RoomToCustomerPassword.containsKey(enterEntity.getRoom_id())&&(ACService.RoomToCustomerPassword.get(enterEntity.getRoom_id())==null||ACService.RoomToCustomerPassword.get(enterEntity.getRoom_id()).equals(enterEntity.getPassword())))
                     {
                         Order nowOrder=RoomToOrder.get(enterEntity.getRoom_id());
                         if(nowOrder.getStatus().equals(Status.INITIAL)||nowOrder.status.equals(Status.OUT)){
@@ -83,13 +85,9 @@ public class ApiController {
                             return ResponseEntity.status(400).body(new StringWrapper("You are already in the room"));
                         }
                     }
-                    else if(ACService.RoomToCustomerPassword.get(enterEntity.getRoom_id())==null)
-                    {
-                        return ResponseEntity.status(400).body(new StringWrapper("room not exist"));
-                    }
                     else
                     {
-                        return ResponseEntity.status(400).body(new StringWrapper("failed to enter room"));
+                        return ResponseEntity.status(400).body(new StringWrapper("room not exist"));
                     }
                 }
         );
@@ -106,16 +104,20 @@ public class ApiController {
                     {
                         return ResponseEntity.status(400).body(null);
                     }else{
-                        if(!(nowOrder.status.equals(Status.INITIAL) || nowOrder.status.equals(Status.OUT)||nowOrder.status.equals(Status.PAUSED)))
+                        if((nowOrder.status.equals(Status.INITIAL) ||nowOrder.status.equals(Status.OUT)||nowOrder.status.equals(Status.COMPLETE)))
                         {
                             return ResponseEntity.status(400).body(null);
                         }else{
-                            waitingQueue.add(nowOrder);
-                            nowOrder.status=Status.WAITING;
-                            nowOrder.LastDate=LocalDateTime.now();
-                            nowOrder.actions.put(nowOrder.LastDate,new Action(ActionType.Request,nowOrder.serviceSlice.getCost()));
-                            ServiceSliceWrapper serviceSliceWrapper=new ServiceSliceWrapper(nowOrder.serviceSlice,"ok");
-                            return ResponseEntity.ok(serviceSliceWrapper);
+                            if(!waitingQueue.contains(nowOrder)&&!servingQueue.contains(nowOrder)){
+                                waitingQueue.add(nowOrder);
+                                nowOrder.status = Status.WAITING;
+                                nowOrder.LastDate = LocalDateTime.now();
+                                nowOrder.actions.put(nowOrder.LastDate, new Action(ActionType.Request, nowOrder.serviceSlice.getCost()));
+                                ServiceSliceWrapper serviceSliceWrapper = new ServiceSliceWrapper(nowOrder.serviceSlice, "ok");
+                                return ResponseEntity.ok(serviceSliceWrapper);
+                            }else{
+                                return ResponseEntity.status(400).body(null);//already in queue
+                            }
                         }
                     }
                 }
@@ -136,14 +138,7 @@ public class ApiController {
                     } else if (nowOrder.status.equals(Status.COMPLETE)) {
                         ServiceSliceWrapper serviceSliceWrapper=new ServiceSliceWrapper(null,"Illegal operation");
                         return ResponseEntity.status(400).body(serviceSliceWrapper);
-                    } else if(nowOrder.status.equals(Status.IN_PROGRESS)){
-                        LocalDateTime nowdate=LocalDateTime.now();
-//                        nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowdate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
-                        nowOrder.LastDate=nowdate;
-                        nowOrder.actions.put(nowdate,new Action(ActionType.Query,nowOrder.serviceSlice.getCost()));
-                        ServiceSliceWrapper serviceSliceWrapper=new ServiceSliceWrapper(nowOrder.serviceSlice,"ok");
-                        return ResponseEntity.ok(serviceSliceWrapper);
-                    }else{
+                    } else{
                         LocalDateTime nowdate=LocalDateTime.now();
                         nowOrder.LastDate=nowdate;
                         nowOrder.actions.put(nowdate,new Action(ActionType.Query,nowOrder.serviceSlice.getCost()));
@@ -159,8 +154,8 @@ public class ApiController {
                 speedJsonWrapper -> {
                     SpeedJson speedJson = speedJsonWrapper.data;
                     Order nowOrder = RoomToOrder.get(speedJson.room_id);
-                    if (nowOrder == null||!nowOrder.status.equals(Status.IN_PROGRESS)) {
-                        return ResponseEntity.status(400).body(null);
+                    if (nowOrder == null||nowOrder.status.equals(Status.INITIAL)||nowOrder.status.equals(Status.OUT)||nowOrder.status.equals(Status.COMPLETE)) {
+                        return ResponseEntity.status(400).body(new StringWrapper("You are not in the room"));
                     } else {
                         LocalDateTime nowDate =LocalDateTime.now();
 //                        nowOrder.serviceSlice.setCost(Speed.valueOf(speedJson.speed).getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
@@ -179,8 +174,8 @@ public class ApiController {
                 tempJsonWrapper -> {
                     TempJson tempJson = tempJsonWrapper.data;
                     Order nowOrder = RoomToOrder.get(tempJson.room_id);
-                    if (nowOrder == null||!nowOrder.status.equals(Status.IN_PROGRESS)) {
-                        return ResponseEntity.status(400).body(null);
+                    if (nowOrder == null||nowOrder.status.equals(Status.INITIAL)||nowOrder.status.equals(Status.OUT)||nowOrder.status.equals(Status.COMPLETE)) {
+                        return ResponseEntity.status(400).body(new StringWrapper("You are not in the room"));
                     } else {
                         LocalDateTime nowDate =LocalDateTime.now();
 //                        nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
@@ -257,7 +252,10 @@ public class ApiController {
                             StringWrapper stringWrapper = new StringWrapper("ok");
                             return ResponseEntity.ok(stringWrapper);
                         } else {
-                            return ResponseEntity.status(400).body(null);
+//                            return ResponseEntity.status(400).body(null);
+                            nowOrder.status = Status.OUT;
+                            StringWrapper stringWrapper = new StringWrapper("ok");
+                            return ResponseEntity.ok(stringWrapper);
                         }
                     }
                 }
@@ -266,15 +264,19 @@ public class ApiController {
     @PostMapping("/check_bill")
     public Mono<ResponseEntity<Order>> CheckBill(@RequestBody Mono<StringWrapper> stringWrapperMono)
     {
-        return stringWrapperMono.map(
+        return stringWrapperMono.mapNotNull(
                 stringWrapper -> {
                     String string = stringWrapper.getMsg();
                     Order nowOrder = RoomToOrder.get(string);
                     if(nowOrder==null||!nowOrder.status.equals(Status.OUT)) {
                         return ResponseEntity.status(400).body(null);
-                    }else{
-                        nowOrder.LastDate= LocalDateTime.now();
-                        return ResponseEntity.ok(nowOrder);
+                    }else {
+                        nowOrder.LastDate = LocalDateTime.now();
+                        return orderRepository.save(nowOrder).map(
+                                order -> {
+                                    ExcelExporter.exportOrderToExcel(order,"file.xlsx");
+                                    return ResponseEntity.ok(nowOrder);
+                                }).block();
                     }
                 }
         );
@@ -282,7 +284,7 @@ public class ApiController {
     @PostMapping("/check_detailed_record")
     public Mono<ResponseEntity<Order>> CheckDetailedRecord(@RequestBody Mono<StringWrapper> stringWrapperMono)
     {
-        return stringWrapperMono.map(
+        return stringWrapperMono.mapNotNull(
                 stringWrapper -> {
                     String string = stringWrapper.getMsg();
                     Order nowOrder = RoomToOrder.get(string);
@@ -290,7 +292,11 @@ public class ApiController {
                         return ResponseEntity.status(400).body(null);
                     }else{
                         nowOrder.LastDate= LocalDateTime.now();
-                        return ResponseEntity.ok(nowOrder);
+                        return orderRepository.save(nowOrder).map(
+                                order -> {
+                                    ExcelExporter.exportOrderToExcelDetailed(order,"file.xlsx");
+                                    return ResponseEntity.ok(nowOrder);
+                                }).block();
                     }
                 }
         );
@@ -307,11 +313,18 @@ public class ApiController {
               }else{
                   nowOrder.LastDate= LocalDateTime.now();
                     nowOrder.status=Status.COMPLETE;
+                    RoomToOrder.replace(string,null);//Order 与 Room解除绑定
+                    RoomToCustomerPassword.replace(string,null);
                     return orderRepository.save(nowOrder).map(
                       order -> ResponseEntity.status(200).body(null)
                     ).block();
               }
           }
         );
+    }
+    @GetMapping("")
+    public Mono<ResponseEntity<?>> Hello()
+    {
+        return Mono.just(ResponseEntity.ok("hello"));
     }
 }

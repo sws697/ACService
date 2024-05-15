@@ -15,8 +15,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+
+//@EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL)
 @SpringBootApplication
-@EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL)
 @EnableR2dbcAuditing
 @EnableScheduling
 public class ACService {
@@ -42,6 +43,7 @@ public class ACService {
         FeePerDayPerRoom.put("room_3",150);
         FeePerDayPerRoom.put("room_4",200);
         FeePerDayPerRoom.put("room_5",100);
+        RoomToCustomerPassword.put("room_1","1");
         SpringApplication.run(ACService.class, args);
     }
 

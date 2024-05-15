@@ -10,12 +10,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ExcelExporter {
-    private String mapToString(Map<LocalDateTime, Action> map) {
+    private static String mapToString(Map<LocalDateTime, Action> map) {
         return map.entrySet().stream()
                 .map(entry -> entry.getKey().toString() + ": " + entry.getValue().toString())
                 .collect(Collectors.joining(",\n "));
     }
-    public void exportOrderToExcel(Order order, String filePath) {
+    public static void exportOrderToExcel(Order order, String filePath) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Order");
 
@@ -42,7 +42,7 @@ public class ExcelExporter {
         }
     }
 
-    public void exportOrderToExcelDetailed(Order order, String filePath) {
+    public static void exportOrderToExcelDetailed(Order order, String filePath) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Order");
 

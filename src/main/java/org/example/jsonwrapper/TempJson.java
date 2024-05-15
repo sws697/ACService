@@ -1,6 +1,13 @@
 package org.example.jsonwrapper;
 
-public class TempJson {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TempJson implements java.io.Serializable{
     public String room_id;
     public int temp;
 }

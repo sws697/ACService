@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 
@@ -41,48 +42,53 @@ public class Scheduler {
         }
     }
     @Scheduled(cron = "*/1 * * * * ?")
-    public void UpdateTempHigh()
-    {
-        if(mode == Mode.COOL){
-            for (Order order : servingQueue) {
-                if(order.serviceSlice.getCurrent_temp() > order.serviceSlice.getTarget_temp()){
-                     if (order.getServiceSlice().getSpeed() == Speed.HIGH) {
+    public void UpdateTempHigh() {
+        if (mode == Mode.COOL) {
+            Iterator<Order> iterator = servingQueue.iterator();
+            while (iterator.hasNext()) {
+                Order order = iterator.next();
+                if (order.serviceSlice.getCurrent_temp() > order.serviceSlice.getTarget_temp()) {
+                    if (order.getServiceSlice().getSpeed() == Speed.HIGH) {
                         order.serviceSlice.setCurrent_temp(order.serviceSlice.getCurrent_temp() - 1);
-                         order.serviceSlice.setCost(order.serviceSlice.getCost()+1);
-                        if(Objects.equals(order.serviceSlice.getCurrent_temp(), order.serviceSlice.getTarget_temp()))
-                        {
-                            order.status=Status.PAUSED;
+                        order.serviceSlice.setCost(order.serviceSlice.getCost() + 1);
+                        if (Objects.equals(order.serviceSlice.getCurrent_temp(), order.serviceSlice.getTarget_temp())) {
+                            order.status = Status.PAUSED;
                             order.LastDate = LocalDateTime.now();
                             order.actions.put(order.LastDate, new Action(ActionType.Pause, order.serviceSlice.getCost()));
-                            servingQueue.remove(order);
+                            iterator.remove();
+                            resourcesCount++;
                         }
                     }
                 }
             }
-        }else if(mode == Mode.HEAT){
-            for (Order order : servingQueue) {
-                if(order.serviceSlice.getCurrent_temp() < order.serviceSlice.getTarget_temp()){
+        } else if (mode == Mode.HEAT) {
+            Iterator<Order> iterator = servingQueue.iterator();
+            while (iterator.hasNext()) {
+                Order order = iterator.next();
+                if (order.serviceSlice.getCurrent_temp() < order.serviceSlice.getTarget_temp()) {
                     if (order.getServiceSlice().getSpeed() == Speed.HIGH) {
                         order.serviceSlice.setCurrent_temp(order.serviceSlice.getCurrent_temp() + 1);
-                        order.serviceSlice.setCost(order.serviceSlice.getCost()+1);
-                        if(Objects.equals(order.serviceSlice.getCurrent_temp(), order.serviceSlice.getTarget_temp()))
-                        {
-                            order.status=Status.PAUSED;
+                        order.serviceSlice.setCost(order.serviceSlice.getCost() + 1);
+                        if (Objects.equals(order.serviceSlice.getCurrent_temp(), order.serviceSlice.getTarget_temp())) {
+                            order.status = Status.PAUSED;
                             order.LastDate = LocalDateTime.now();
                             order.actions.put(order.LastDate, new Action(ActionType.Pause, order.serviceSlice.getCost()));
-                            servingQueue.remove(order);//移除了,但是没有加入waitingQueue
+                            iterator.remove();
+                            resourcesCount++;
                         }
                     }
                 }
-            }
 
+            }
         }
     }
     @Scheduled(cron = "*/2 * * * * ?")
     public void UpdateTempMedium()
     {
         if(mode == Mode.COOL){
-            for (Order order : servingQueue) {
+            Iterator<Order> iterator = servingQueue.iterator();
+            while (iterator.hasNext()) {
+                Order order = iterator.next();
                 if(order.serviceSlice.getCurrent_temp() > order.serviceSlice.getTarget_temp()){
                     if (order.getServiceSlice().getSpeed() == Speed.MEDIUM) {
                         order.serviceSlice.setCurrent_temp(order.serviceSlice.getCurrent_temp() - 1);
@@ -92,13 +98,16 @@ public class Scheduler {
                             order.status=Status.PAUSED;
                             order.LastDate = LocalDateTime.now();
                             order.actions.put(order.LastDate, new Action(ActionType.Pause, order.serviceSlice.getCost()));
-                            servingQueue.remove(order);
+                            iterator.remove();
+                            resourcesCount++;
                         }
                     }
                 }
             }
         }else if(mode == Mode.HEAT){
-            for (Order order : servingQueue) {
+            Iterator<Order> iterator = servingQueue.iterator();
+            while (iterator.hasNext()) {
+                Order order = iterator.next();
                 if(order.serviceSlice.getCurrent_temp() < order.serviceSlice.getTarget_temp()){
                     if (order.getServiceSlice().getSpeed() == Speed.MEDIUM) {
                         order.serviceSlice.setCurrent_temp(order.serviceSlice.getCurrent_temp() + 1);
@@ -108,54 +117,56 @@ public class Scheduler {
                             order.status=Status.PAUSED;
                             order.LastDate = LocalDateTime.now();
                             order.actions.put(order.LastDate, new Action(ActionType.Pause, order.serviceSlice.getCost()));
-                            servingQueue.remove(order);
+                            resourcesCount++;
+                            iterator.remove();
                         }
                     }
                 }
-            }
 
         }
     }
-
+    }
     @Scheduled(cron = "*/3 * * * * ?")
-    public void UpdateTempLow()
-    {
-        if(mode == Mode.COOL){
-            for (Order order : servingQueue) {
-                if(order.serviceSlice.getCurrent_temp() > order.serviceSlice.getTarget_temp()){
+    public void UpdateTempLow() {
+        if (mode == Mode.COOL) {
+            Iterator<Order> iterator = servingQueue.iterator();
+            while (iterator.hasNext()) {
+                Order order = iterator.next();
+                if (order.serviceSlice.getCurrent_temp() > order.serviceSlice.getTarget_temp()) {
                     if (order.getServiceSlice().getSpeed() == Speed.LOW) {
                         order.serviceSlice.setCurrent_temp(order.serviceSlice.getCurrent_temp() - 1);
-                        order.serviceSlice.setCost(order.serviceSlice.getCost()+1);
-                        if(Objects.equals(order.serviceSlice.getCurrent_temp(), order.serviceSlice.getTarget_temp()))
-                        {
-                            order.status=Status.PAUSED;
+                        order.serviceSlice.setCost(order.serviceSlice.getCost() + 1);
+                        if (Objects.equals(order.serviceSlice.getCurrent_temp(), order.serviceSlice.getTarget_temp())) {
+                            order.status = Status.PAUSED;
                             order.LastDate = LocalDateTime.now();
                             order.actions.put(order.LastDate, new Action(ActionType.Pause, order.serviceSlice.getCost()));
-                            servingQueue.remove(order);
+                            iterator.remove();
+                            resourcesCount++;
                         }
                     }
                 }
             }
-        }else if(mode == Mode.HEAT){
-            for (Order order : servingQueue) {
-                if(order.serviceSlice.getCurrent_temp() < order.serviceSlice.getTarget_temp()){
+        } else if (mode == Mode.HEAT) {
+            Iterator<Order> iterator = servingQueue.iterator();
+            while (iterator.hasNext()) {
+                Order order = iterator.next();
+                if (order.serviceSlice.getCurrent_temp() < order.serviceSlice.getTarget_temp()) {
                     if (order.getServiceSlice().getSpeed() == Speed.LOW) {
                         order.serviceSlice.setCurrent_temp(order.serviceSlice.getCurrent_temp() + 1);
-                        order.serviceSlice.setCost(order.serviceSlice.getCost()+1);
-                        if(Objects.equals(order.serviceSlice.getCurrent_temp(), order.serviceSlice.getTarget_temp()))
-                        {
-                            order.status=Status.PAUSED;
+                        order.serviceSlice.setCost(order.serviceSlice.getCost() + 1);
+                        if (Objects.equals(order.serviceSlice.getCurrent_temp(), order.serviceSlice.getTarget_temp())) {
+                            order.status = Status.PAUSED;
                             order.LastDate = LocalDateTime.now();
                             order.actions.put(order.LastDate, new Action(ActionType.Pause, order.serviceSlice.getCost()));
-                            servingQueue.remove(order);
+                            iterator.remove();
+                            resourcesCount++;
                         }
                     }
                 }
-            }
 
+            }
         }
     }
-
 
     @Scheduled(cron = "*/120 * * * * ?")
     public void renewStatus() {
@@ -165,28 +176,31 @@ public class Scheduler {
     @Scheduled(cron = "*/5 * * * * ?")
     public void checkQueue() {
         System.out.println("Checking Queue");
-        if (resourcesCount > 0) {
-            while (resourcesCount > 0 && !waitingQueue.isEmpty()) {
-                System.out.println("Resource Available");
-                resourcesCount--;
-                waitingQueue.sort((order1, order2) ->
-                {
-                    if (!Objects.equals(order1.serviceSlice.getSpeed().getValue(), order2.serviceSlice.getSpeed().getValue()))
-                        return (int) (order2.serviceSlice.getSpeed().getValue() - order1.serviceSlice.getSpeed().getValue());
-                    else {
-                        return order1.LastDate.compareTo(order2.LastDate);
+        System.out.println(waitingQueue.toString());
+        System.out.println(servingQueue.toString());
+        if(!waitingQueue.isEmpty()){
+            if (resourcesCount > 0) {
+                while (resourcesCount > 0 && !waitingQueue.isEmpty()) {
+                    System.out.println("Resource Available");
+                    resourcesCount--;
+                    waitingQueue.sort((order1, order2) ->
+                    {
+                        if (!Objects.equals(order1.serviceSlice.getSpeed().getValue(), order2.serviceSlice.getSpeed().getValue()))
+                            return (int) (order2.serviceSlice.getSpeed().getValue() - order1.serviceSlice.getSpeed().getValue());
+                        else {
+                            return order1.LastDate.compareTo(order2.LastDate);
+                        }
+                    });
+                    if (!waitingQueue.isEmpty()) {
+                        Order order = waitingQueue.remove(0);
+                        order.status = Status.IN_PROGRESS;
+                        order.LastDate = LocalDateTime.now();
+                        order.actions.put(order.LastDate, new Action(ActionType.Serve, order.serviceSlice.getCost()));
+                        servingQueue.add(order);
+                        StatusChange = true;
                     }
-                });
-                Order order = waitingQueue.remove(0);
-                order.status = Status.IN_PROGRESS;
-                order.LastDate = LocalDateTime.now();
-                order.actions.put(order.LastDate, new Action(ActionType.Serve, order.serviceSlice.getCost()));
-                servingQueue.add(order);
-                StatusChange = true;
-            }
-        }
-        else
-        {
+                }
+            } else {
                 servingQueue.sort((order1, order2) ->
                 {
                     if (!Objects.equals(order1.serviceSlice.getSpeed().getValue(), order2.serviceSlice.getSpeed().getValue()))
@@ -203,18 +217,23 @@ public class Scheduler {
                         return order1.LastDate.compareTo(order2.LastDate);
                     }
                 });
-                Order servingFrontOrder = servingQueue.get(0);
-                Order waitingFrontOrder = waitingQueue.get(0);
-                if (waitingFrontOrder.getServiceSlice().getSpeed().getValue() > servingFrontOrder.getServiceSlice().getSpeed().getValue()) {
-                    QueueHeadSwap(servingFrontOrder, waitingFrontOrder);
-                } else if (Objects.equals(waitingFrontOrder.getServiceSlice().getSpeed().getValue(), servingFrontOrder.getServiceSlice().getSpeed().getValue())) {
-                    if ((!StatusChange) && LocalDateTime.now().get(ChronoField.SECOND_OF_DAY) - waitingFrontOrder.LastDate.get(ChronoField.SECOND_OF_DAY) >= SliceSeconds) {
+                if (!servingQueue.isEmpty() && !waitingQueue.isEmpty()) {
+                    Order servingFrontOrder = servingQueue.get(0);
+                    Order waitingFrontOrder = waitingQueue.get(0);
+                    if (waitingFrontOrder.getServiceSlice().getSpeed().getValue() > servingFrontOrder.getServiceSlice().getSpeed().getValue()) {
                         QueueHeadSwap(servingFrontOrder, waitingFrontOrder);
+                    } else if (Objects.equals(waitingFrontOrder.getServiceSlice().getSpeed().getValue(), servingFrontOrder.getServiceSlice().getSpeed().getValue())) {
+                        if ((!StatusChange) && LocalDateTime.now().get(ChronoField.SECOND_OF_DAY) - waitingFrontOrder.LastDate.get(ChronoField.SECOND_OF_DAY) >= SliceSeconds) {
+                            QueueHeadSwap(servingFrontOrder, waitingFrontOrder);
+                        }
                     }
                 }
 
 
+            }
         }
+        System.out.println(waitingQueue.toString());
+        System.out.println(servingQueue.toString());
     }
 
     private void QueueHeadSwap(Order servingFrontOrder, Order waitingFrontOrder) {

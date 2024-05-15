@@ -1,10 +1,13 @@
 package org.example.jsonwrapper;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.example.ServiceSlice;
 
 @Data
-public class ServiceSliceWrapper {
+@NoArgsConstructor
+public class ServiceSliceWrapper implements java.io.Serializable{
     private ServiceSlice data;
     private String msg;
 

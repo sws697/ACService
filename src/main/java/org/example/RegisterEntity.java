@@ -1,26 +1,25 @@
 package org.example;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.io.Serializable;
+@AllArgsConstructor
+@NoArgsConstructor
 @Table("register")
-public class RegisterEntity {
+@Data
+public class RegisterEntity implements Serializable {
     public String name;
-    @Id
-    public Long customer_id;
+
+    public @Id Long customer_id;
     public String password;
-    RegisterEntity(String name, Long customer_id, String password) {
-        this.name = name;
-        this.customer_id = customer_id;
-        this.password = password;
-    }
+
     RegisterEntity(String name,Long customer_id)
     {
         this.name = name;
         this.customer_id = customer_id;
-    }
-    RegisterEntity()
-    {
-
     }
 }

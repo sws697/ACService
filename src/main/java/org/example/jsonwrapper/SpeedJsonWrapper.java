@@ -1,5 +1,12 @@
 package org.example.jsonwrapper;
 
-public class SpeedJsonWrapper {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class SpeedJsonWrapper implements java.io.Serializable{
     public SpeedJson data;
 }

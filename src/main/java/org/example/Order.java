@@ -1,7 +1,9 @@
 package org.example;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 @Data
 @Table("ACsorder")
+@AllArgsConstructor
 public class Order {
     private @Id Long id;
     @LastModifiedDate
