@@ -20,7 +20,6 @@ public class ACService {
     public static ArrayList<Order> waitingQueue = new ArrayList<>();
     public static Map<String,String> RoomToCustomerPassword = new HashMap<>();
     public static Map<String,Order> RoomToOrder = new HashMap<>();
-    public static Map<String,Integer> RoomToCheckInDays = new HashMap<>();
     public static Map<String,Integer> FeePerDayPerRoom = new HashMap<>();
     public static void main(String[] args) {
         RoomToOrder.put("1",null);
@@ -48,11 +47,6 @@ public class ACService {
         RoomToCustomerPassword.put("3","1");
         RoomToCustomerPassword.put("4","5");
         RoomToCustomerPassword.put("5","1");
-        RoomToCheckInDays.put("1",0);
-        RoomToCheckInDays.put("2",0);
-        RoomToCheckInDays.put("3",0);
-        RoomToCheckInDays.put("4",0);
-        RoomToCheckInDays.put("5",0);
         SpringApplication.run(ACService.class, args);
     }
 

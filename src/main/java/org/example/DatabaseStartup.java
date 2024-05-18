@@ -25,7 +25,7 @@ public class DatabaseStartup {
 //                    .as(StepVerifier::create)
 //                    .expectNextCount(1)
 //                    .verifyComplete();
-            template.getDatabaseClient().sql("CREATE TABLE IF NOT EXISTS ACsorder (id BIGINT PRIMARY KEY AUTO_INCREMENT, last_date TIMESTAMP, status VARCHAR(255), actions JSON, service_slice JSON, customer_id BIGINT, customer_name VARCHAR(255), room_id VARCHAR(255))").fetch().rowsUpdated()
+            template.getDatabaseClient().sql("CREATE TABLE IF NOT EXISTS ACssorder (id BIGINT PRIMARY KEY AUTO_INCREMENT, last_date TIMESTAMP, status VARCHAR(255), actions JSON, service_slice JSON, customer_id BIGINT, customer_name VARCHAR(255), room_id VARCHAR(255), check_in_days INT, check_in_fee INT)").fetch().rowsUpdated()
                     .as(StepVerifier::create)
                     .expectNextCount(1)
                     .verifyComplete();

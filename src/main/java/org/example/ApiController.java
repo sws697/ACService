@@ -53,15 +53,15 @@ public class ApiController {
                             newOrder.ResumeTimer = LocalDateTime.now();
                             RoomToCustomerPassword.replace(entry.getKey(), registerEntity.password);
                             RoomToOrder.replace(entry.getKey(), newOrder);
-                            RoomToCheckInDays.replace(entry.getKey(), 0);
+                            newOrder.CheckInDays = 0;
                             if (Scheduler.mode == Scheduler.Mode.COOL) {
                                 newOrder.serviceSlice.setCurrent_temp(Double.valueOf(defaultTempSummer.get(entry.getKey())));
-                                newOrder.serviceSlice.setCost(Double.valueOf(FeePerDayPerRoom.get(entry.getKey())));
+//                                newOrder.serviceSlice.setCost(Double.valueOf(FeePerDayPerRoom.get(entry.getKey())));
                                 newOrder.serviceSlice.setTarget_temp(25.0);
                                 newOrder.serviceSlice.setMode("cold");
                             } else {
                                 newOrder.serviceSlice.setCurrent_temp(Double.valueOf(defaultTempWinter.get(entry.getKey())));
-                                newOrder.serviceSlice.setCost(Double.valueOf(FeePerDayPerRoom.get(entry.getKey())));
+//                                newOrder.serviceSlice.setCost(Double.valueOf(FeePerDayPerRoom.get(entry.getKey())));
                                 newOrder.serviceSlice.setTarget_temp(22.0);
                                 newOrder.serviceSlice.setMode("heat");
                             }
@@ -236,7 +236,7 @@ public class ApiController {
                             nowOrder.ResumeTimer = nowDate;
                             nowOrder.LastDate = nowDate;
                             Scheduler.resourcesCount++;
-                            RoomToCheckInDays.replace(service.room_id, RoomToCheckInDays.get(service.room_id) + 1);
+                            nowOrder.CheckInDays++;
                             StringWrapper stringWrapper = new StringWrapper("ok");
                             return ResponseEntity.ok(stringWrapper);
                         } else if (waitingQueue.contains(nowOrder)) {
@@ -245,7 +245,7 @@ public class ApiController {
                             LocalDateTime nowDate = LocalDateTime.now();
                             nowOrder.actions.put(nowDate, new Action(ActionType.Pause, nowOrder.serviceSlice.getCost()));
                             nowOrder.LastDate = nowDate;
-                            RoomToCheckInDays.replace(service.room_id, RoomToCheckInDays.get(service.room_id) + 1);
+                            nowOrder.CheckInDays++;
                             StringWrapper stringWrapper = new StringWrapper("ok");
                             return ResponseEntity.ok(stringWrapper);
                         }else if(Scheduler.ServingCacheQueue.contains(nowOrder))
@@ -255,7 +255,7 @@ public class ApiController {
                             LocalDateTime nowDate = LocalDateTime.now();
                             nowOrder.actions.put(nowDate, new Action(ActionType.Pause, nowOrder.serviceSlice.getCost()));
                             nowOrder.LastDate = nowDate;
-                            RoomToCheckInDays.replace(service.room_id, RoomToCheckInDays.get(service.room_id) + 1);
+                            nowOrder.CheckInDays++;
                             StringWrapper stringWrapper = new StringWrapper("ok");
                             return ResponseEntity.ok(stringWrapper);
                         }
@@ -310,7 +310,7 @@ public class ApiController {
         );
     }
 
-    @PostMapping("/check_bill")
+    @PostMapping("/create_ac_bill")
     public Mono<ResponseEntity<Order>> CheckBill(@RequestBody Mono<StringWrapper> stringWrapperMono) {
         return stringWrapperMono.publishOn(Schedulers.boundedElastic()).mapNotNull(
                 stringWrapper -> {
@@ -330,7 +330,8 @@ public class ApiController {
         );
     }
 
-    @PostMapping("/check_detailed_record")
+
+    @PostMapping("/create_ac_detailed_record")
     public Mono<ResponseEntity<Order>> CheckDetailedRecord(@RequestBody Mono<StringWrapper> stringWrapperMono) {
         return stringWrapperMono.publishOn(Schedulers.boundedElastic()).mapNotNull(
                 stringWrapper -> {
@@ -350,6 +351,24 @@ public class ApiController {
         );
     }
 
+    @PostMapping("create_accom_bill")
+    public Mono<ResponseEntity<Order>> CheckAccomBill(@RequestBody Mono<StringWrapper> stringWrapperMono) {
+        return stringWrapperMono.publishOn(Schedulers.boundedElastic()).mapNotNull(
+                stringWrapper -> {
+                    String string = stringWrapper.getMsg();
+                    Order nowOrder = RoomToOrder.get(string);
+                    if (nowOrder == null) {
+                        return ResponseEntity.status(400).body(null);
+                    } else {
+                        return orderRepository.save(nowOrder).map(
+                                order -> {
+                                    ExcelExporter.exportOrderToExcelAccom(order);
+                                    return ResponseEntity.ok(nowOrder);
+                                }).block();
+                    }
+                });
+    }
+
     @PostMapping("/complete")
     public Mono<ResponseEntity<?>> Complete(@RequestBody Mono<StringWrapper> stringWrapperMono) {
         return stringWrapperMono.publishOn(Schedulers.boundedElastic()).mapNotNull(
@@ -365,7 +384,6 @@ public class ApiController {
                         nowOrder.status = Status.COMPLETE;
                         RoomToOrder.replace(string, null);//Order 与 Room解除绑定
                         RoomToCustomerPassword.replace(string, null);
-                        RoomToCheckInDays.replace(string, 0);
                         return orderRepository.save(nowOrder).map(
                                 order -> ResponseEntity.status(200).body(null)
                         ).block();

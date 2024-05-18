@@ -10,7 +10,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.time.LocalDateTime;
 import java.util.*;
 @Data
-@Table("ACsorder")
+@Table("ACssorder")
 @AllArgsConstructor
 public class Order {
     private @Id Long id;
@@ -25,6 +25,8 @@ public class Order {
     public Long CustomerId;
     public String CustomerName;
     public String RoomId;
+    public Integer CheckInDays;
+    public Integer CheckInFee;
     @Transient
     public LocalDateTime ServingTimer;
     @Transient
