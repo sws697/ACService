@@ -1,19 +1,12 @@
 package org.example;
 
-import io.r2dbc.spi.ConnectionFactories;
-import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.ConnectionFactoryOptions;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import org.springframework.hateoas.config.EnableHypermediaSupport;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 
 //@EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL)
@@ -21,29 +14,40 @@ import java.util.Map;
 @EnableR2dbcAuditing
 @EnableScheduling
 public class ACService {
-    public static Map<String,Integer> defaultTemp = new HashMap<>();
+    public static Map<String,Integer> defaultTempSummer = new HashMap<>();
+    public static Map<String,Integer> defaultTempWinter=new HashMap<>();
     public static ArrayList<Order> servingQueue = new ArrayList<>();
     public static ArrayList<Order> waitingQueue = new ArrayList<>();
     public static Map<String,String> RoomToCustomerPassword = new HashMap<>();
     public static Map<String,Order> RoomToOrder = new HashMap<>();
+
     public static Map<String,Integer> FeePerDayPerRoom = new HashMap<>();
     public static void main(String[] args) {
-        RoomToOrder.put("room_1",null);
-        RoomToOrder.put("room_2",null);
-        RoomToOrder.put("room_3",null);
-        RoomToOrder.put("room_4",null);
-        RoomToOrder.put("room_5",null);
-        defaultTemp.put("room_1",32);
-        defaultTemp.put("room_2",28);
-        defaultTemp.put("room_3",30);
-        defaultTemp.put("room_4",29);
-        defaultTemp.put("room_5",35);
-        FeePerDayPerRoom.put("room_1",100);
-        FeePerDayPerRoom.put("room_2",125);
-        FeePerDayPerRoom.put("room_3",150);
-        FeePerDayPerRoom.put("room_4",200);
-        FeePerDayPerRoom.put("room_5",100);
-        RoomToCustomerPassword.put("room_1","1");
+        RoomToOrder.put("1",null);
+        RoomToOrder.put("2",null);
+        RoomToOrder.put("3",null);
+        RoomToOrder.put("4",null);
+        RoomToOrder.put("5",null);
+        defaultTempSummer.put("1",32);
+        defaultTempSummer.put("2",28);
+        defaultTempSummer.put("3",30);
+        defaultTempSummer.put("4",29);
+        defaultTempSummer.put("5",35);
+        defaultTempWinter.put("1",10);
+        defaultTempWinter.put("2",15);
+        defaultTempWinter.put("3",18);
+        defaultTempWinter.put("4",12);
+        defaultTempWinter.put("5",14);
+        FeePerDayPerRoom.put("1",100);
+        FeePerDayPerRoom.put("2",125);
+        FeePerDayPerRoom.put("3",150);
+        FeePerDayPerRoom.put("4",200);
+        FeePerDayPerRoom.put("5",100);
+        RoomToCustomerPassword.put("1","1");
+        RoomToCustomerPassword.put("2","1");
+        RoomToCustomerPassword.put("3","1");
+        RoomToCustomerPassword.put("4","5");
+        RoomToCustomerPassword.put("5","1");
         SpringApplication.run(ACService.class, args);
     }
 

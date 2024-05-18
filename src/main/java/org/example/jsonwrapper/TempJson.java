@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TempJson implements java.io.Serializable{
     public String room_id;
-    public int temp;
+    public double temp;
 }

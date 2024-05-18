@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 @Getter
 public enum Speed implements Serializable {
-    LOW(0.1), MEDIUM(0.3), HIGH(0.5);
+    low(1/3.0), medium(1/2.0), high(1.0);
     private final Double value;
      Speed(Double value){
          this.value = value;

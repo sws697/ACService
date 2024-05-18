@@ -1,14 +1,9 @@
 package org.example;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.convert.ReadingConverter;
-import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -29,11 +24,19 @@ public class Order {
     public Long CustomerId;
     public String CustomerName;
     public String RoomId;
+    @Transient
+    public LocalDateTime ServingTimer;
+    @Transient
+    public LocalDateTime ResumeTimer;
+    @Transient
+    public LocalDateTime CacheTimer;
+    @Transient
+    public LocalDateTime WaitingTimer;
     public Order(LocalDateTime LastDate, Status status, ServiceSlice serviceSlice, Long CustomerId, String CustomerName, String RoomId) {
         this.LastDate = LastDate;
         this.status = status;
         this.serviceSlice = serviceSlice;
-        this.actions = new HashMap<>();
+        this.actions = new TreeMap<>();
         this.CustomerId = CustomerId;
         this.CustomerName = CustomerName;
         this.RoomId = RoomId;

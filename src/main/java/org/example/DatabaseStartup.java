@@ -33,7 +33,7 @@ public class DatabaseStartup {
 //            actions.put(LocalDateTime.now(),new Action(ActionType.ChangeTemp,"26",0.0));
 //
 //
-//            Order order2=new Order(LocalDateTime.now(),Status.INITIAL,new ServiceSlice(Speed.LOW,0.0,25,26),2L,"Alice","101",actions,2L);
+//            Order order2=new Order(LocalDateTime.now(),Status.INITIAL,new ServiceSlice(Speed.low,0.0,25,26),2L,"Alice","101",actions,2L);
 //            String serviceSliceJsonString=serviceSliceToJsonConverter.convert(order2.serviceSlice);
 //            System.out.println(serviceSliceJsonString);
 //            String actionJsonString=actionToJsonConvertor.convert(new Action(ActionType.ChangeTemp,"26",0.0));
@@ -42,7 +42,7 @@ public class DatabaseStartup {
 //            System.out.println(actionsJsonString);
 //
 //            template.insert(Order.class)
-//                    .using(new Order(LocalDateTime.now(),Status.INITIAL,new ServiceSlice(Speed.LOW,0.0,25,26),2L,"Alice","101",actions,1L))
+//                    .using(new Order(LocalDateTime.now(),Status.INITIAL,new ServiceSlice(Speed.low,0.0,25,26),2L,"Alice","101",actions,1L))
 //                    .as(StepVerifier::create)
 //                    .expectNextCount(1)
 //                    .verifyComplete();
