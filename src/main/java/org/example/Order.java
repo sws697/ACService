@@ -16,6 +16,7 @@ public class Order {
     private @Id Long id;
     @LastModifiedDate
     public LocalDateTime LastDate;
+
     public Status status;
     @Column("actions")
     public Map<LocalDateTime,Action> actions;
@@ -29,9 +30,9 @@ public class Order {
     @Transient
     public LocalDateTime ResumeTimer;
     @Transient
-    public LocalDateTime CacheTimer;
-    @Transient
     public LocalDateTime WaitingTimer;
+    @Transient
+    public LocalDateTime ServingInTimer;
     public Order(LocalDateTime LastDate, Status status, ServiceSlice serviceSlice, Long CustomerId, String CustomerName, String RoomId) {
         this.LastDate = LastDate;
         this.status = status;

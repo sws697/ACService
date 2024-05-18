@@ -22,14 +22,6 @@ public class ServiceSlice implements java.io.Serializable{
         this.target_temp = target_temp;
     }
 
-    @Override
-    public String toString() {
-        return "ServiceSlice{" +
-                "speed=" + speed +
-                ", target_temp=" + target_temp +
-                ", current_temp=" + current_temp +
-                ", cost=" + cost +
-                '}';
-    }
+
 
 }

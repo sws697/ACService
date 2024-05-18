@@ -15,8 +15,9 @@ public class ExcelExporter {
                 .map(entry -> entry.getKey().toString() + ": " + entry.getValue().toString())
                 .collect(Collectors.joining(",\n "));
     }
-    public static void exportOrderToExcel(Order order, String filePath) {
+    public static void exportOrderToExcel(Order order) {
         Workbook workbook = new XSSFWorkbook();
+        String filePath = "Room"+order.getRoomId()+"Order" + order.getId() + ".xlsx";
         Sheet sheet = workbook.createSheet("Order");
         Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("ID");
@@ -41,10 +42,10 @@ public class ExcelExporter {
         }
     }
 
-    public static void exportOrderToExcelDetailed(Order order, String filePath) {
+    public static void exportOrderToExcelDetailed(Order order) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Order");
-
+        String filePath = "Room"+order.getRoomId()+"DetailedOrder" + order.getId() + ".xlsx";
         Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("ID");
         headerRow.createCell(1).setCellValue("Last Date");

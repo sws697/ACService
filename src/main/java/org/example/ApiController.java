@@ -53,6 +53,7 @@ public class ApiController {
                             newOrder.ResumeTimer = LocalDateTime.now();
                             RoomToCustomerPassword.replace(entry.getKey(), registerEntity.password);
                             RoomToOrder.replace(entry.getKey(), newOrder);
+                            RoomToCheckInDays.replace(entry.getKey(), 0);
                             if (Scheduler.mode == Scheduler.Mode.COOL) {
                                 newOrder.serviceSlice.setCurrent_temp(Double.valueOf(defaultTempSummer.get(entry.getKey())));
                                 newOrder.serviceSlice.setCost(Double.valueOf(FeePerDayPerRoom.get(entry.getKey())));
@@ -109,6 +110,7 @@ public class ApiController {
                             return ResponseEntity.status(400).body(null);
                         } else {
                             if (!waitingQueue.contains(nowOrder) && !servingQueue.contains(nowOrder)) {
+                                nowOrder.WaitingTimer = LocalDateTime.now();
                                 waitingQueue.add(nowOrder);
                                 nowOrder.status = Status.WAITING;
                                 nowOrder.LastDate = LocalDateTime.now();
@@ -163,10 +165,10 @@ public class ApiController {
                         return ResponseEntity.status(400).body(new StringWrapper("You are not in the room"));
                     } else {
                         LocalDateTime nowDate = LocalDateTime.now();
-//                        nowOrder.serviceSlice.setCost(Speed.valueOf(speedJson.speed).getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
                         nowOrder.actions.put(nowDate, new Action(ActionType.ChangeSpeed, speedJson.speed, nowOrder.serviceSlice.getCost()));
                         nowOrder.serviceSlice.setSpeed(Speed.valueOf(speedJson.speed));
                         nowOrder.LastDate = nowDate;
+                        nowOrder.WaitingTimer = LocalDateTime.now();
                         StringWrapper stringWrapper = new StringWrapper("ok");
                         return ResponseEntity.ok(stringWrapper);
                     }
@@ -205,11 +207,10 @@ public class ApiController {
                     if (nowOrder == null || nowOrder.status.equals(Status.INITIAL) || nowOrder.status.equals(Status.OUT) || nowOrder.status.equals(Status.COMPLETE)) {
                         return ResponseEntity.status(400).body(new StringWrapper("You are not in the room"));
                     } else {
-                        LocalDateTime nowDate = LocalDateTime.now();
 //                        nowOrder.serviceSlice.setCost(nowOrder.serviceSlice.getSpeed().getValue()*(nowDate.get(ChronoField.SECOND_OF_DAY)-nowOrder.LastDate.get(ChronoField.SECOND_OF_DAY))+nowOrder.serviceSlice.getCost());
-                        nowOrder.actions.put(nowDate, new Action(ActionType.ChangeTemp, String.valueOf(tempJson.temp), nowOrder.serviceSlice.getCost()));
+//                        nowOrder.actions.put(nowDate, new Action(ActionType.ChangeTemp, String.valueOf(tempJson.temp), nowOrder.serviceSlice.getCost()));
                         nowOrder.serviceSlice.setTarget_temp(tempJson.temp);
-                        nowOrder.LastDate = nowDate;
+//                        nowOrder.LastDate = nowDate;
                         StringWrapper stringWrapper = new StringWrapper("ok");
                         return ResponseEntity.ok(stringWrapper);
                     }
@@ -235,6 +236,7 @@ public class ApiController {
                             nowOrder.ResumeTimer = nowDate;
                             nowOrder.LastDate = nowDate;
                             Scheduler.resourcesCount++;
+                            RoomToCheckInDays.replace(service.room_id, RoomToCheckInDays.get(service.room_id) + 1);
                             StringWrapper stringWrapper = new StringWrapper("ok");
                             return ResponseEntity.ok(stringWrapper);
                         } else if (waitingQueue.contains(nowOrder)) {
@@ -243,10 +245,22 @@ public class ApiController {
                             LocalDateTime nowDate = LocalDateTime.now();
                             nowOrder.actions.put(nowDate, new Action(ActionType.Pause, nowOrder.serviceSlice.getCost()));
                             nowOrder.LastDate = nowDate;
+                            RoomToCheckInDays.replace(service.room_id, RoomToCheckInDays.get(service.room_id) + 1);
                             StringWrapper stringWrapper = new StringWrapper("ok");
                             return ResponseEntity.ok(stringWrapper);
-                        } else {
-                            return ResponseEntity.status(400).body(null);
+                        }else if(Scheduler.ServingCacheQueue.contains(nowOrder))
+                        {
+                            Scheduler.ServingCacheQueue.remove(nowOrder);
+                            nowOrder.status = Status.PAUSED;
+                            LocalDateTime nowDate = LocalDateTime.now();
+                            nowOrder.actions.put(nowDate, new Action(ActionType.Pause, nowOrder.serviceSlice.getCost()));
+                            nowOrder.LastDate = nowDate;
+                            RoomToCheckInDays.replace(service.room_id, RoomToCheckInDays.get(service.room_id) + 1);
+                            StringWrapper stringWrapper = new StringWrapper("ok");
+                            return ResponseEntity.ok(stringWrapper);
+                        }
+                        else {
+                            return ResponseEntity.status(200).body(new StringWrapper("ok"));
                         }
                     }
                 }
@@ -308,7 +322,7 @@ public class ApiController {
 //                        nowOrder.LastDate = LocalDateTime.now();
                         return orderRepository.save(nowOrder).map(
                                 order -> {
-                                    ExcelExporter.exportOrderToExcel(order, "file.xlsx");
+                                    ExcelExporter.exportOrderToExcel(order);
                                     return ResponseEntity.ok(nowOrder);
                                 }).block();
                     }
@@ -328,7 +342,7 @@ public class ApiController {
 //                        nowOrder.LastDate= LocalDateTime.now();
                         return orderRepository.save(nowOrder).map(
                                 order -> {
-                                    ExcelExporter.exportOrderToExcelDetailed(order, "fileDetailed.xlsx");
+                                    ExcelExporter.exportOrderToExcelDetailed(order);
                                     return ResponseEntity.ok(nowOrder);
                                 }).block();
                     }
@@ -351,6 +365,7 @@ public class ApiController {
                         nowOrder.status = Status.COMPLETE;
                         RoomToOrder.replace(string, null);//Order 与 Room解除绑定
                         RoomToCustomerPassword.replace(string, null);
+                        RoomToCheckInDays.replace(string, 0);
                         return orderRepository.save(nowOrder).map(
                                 order -> ResponseEntity.status(200).body(null)
                         ).block();

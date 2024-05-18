@@ -18,10 +18,8 @@ import java.util.List;
 @Configuration
 public class DatabaseConfig extends AbstractR2dbcConfiguration {
 
-    private final Environment env;
     private final ObjectMapper objectMapper;
     public DatabaseConfig(Environment env, ObjectMapper objectMapper) {
-        this.env = env;
         this.objectMapper = objectMapper;
     }
     @Override
